@@ -1,12 +1,19 @@
-# Configure the PagerDuty provider - WHhGict8qm5SVQo9jkWd - https://pdt-huggins.pagerduty.com/
+################################################################################################
+# This configuration requires a PagerDuty API Key and the Destination instance to have Prioties
+# enabled to support event rule creation. Use the API key to generate the Priotiy ID's here:
+# https://api-reference.pagerduty.com/#!/Priorities/get_priorities
+# To Destroy the config run Destroy twice (perhaps a bug in the provider)
+################################################################################################
+variable "pd_token" {
+  type = string
+}
 provider "pagerduty" {
-  #LIVE DEMO ####################  DONT FORGET TO SWITCH BACK TO LIVE DEMO FOR THE PRESENTATION!!!!  ####################
-  token = "WHhGict8qm5SVQo9jkWd"
-  #TEST DEMO - currently https://hug-terraform.pagerduty.com/
-  #token = "6yV68ZEheDWZRwWSpW8F"
+#TEST DEMO - currently https://wareagle.pagerduty.com/
+#  WAR EAGLE token = "vgk-Vmo6ttpssbr4sxbk"
+  token = var.pd_token
 }
 
-################################################################################################
+#################################################################################################
 # Create PagerDuty teams - Automation, Operations, Banking Development (DevOps), Management
 resource "pagerduty_team" "automation" {
   name        = "Automation"
@@ -24,38 +31,28 @@ resource "pagerduty_team" "Stakeholders" {
   name        = "Stakeholders"
   description = "Management Team"
 }
+
 ################################################################################################
 
 
 
 ################################################################################################
 # Create a PagerDuty users
-resource "pagerduty_user" "hug" {
-  name  = "Huggins Terraform"
-  email = "dhuggins+terraform@pagerduty.com"
-  color = "firebrick"
-  role = "user"
-  job_title = "Terraform Administrator"
-}
-resource "pagerduty_user" "dylan" {
-  name  = "Dylan Bower"
-  email = "dbower@pagerduty.com"
+
+resource "pagerduty_user" "darren" {
+  name  = "Darren Huggins"
+  email = "dhuggins@pagerduty.com"
   color = "blue"
   role = "user"
 }
-resource "pagerduty_user" "alfonso" {
-name  = "Alfonso Griglen"
-  email = "alfonso.griglen@example.com"
-  color = "firebrick"
-  role = "observer"
-  }
-resource "pagerduty_user" "eric" {
-  name  = "Eric Cox"
-  email = "eric.cox@rivertcorp.com"
-  color = "green"
+
+resource "pagerduty_user" "jimh" {
+  name  = "Jim TH"
+  email = "jim@example.com"
+  color = "blue"
   role = "user"
-  job_title = "The Boss from Terraform"
 }
+
 resource "pagerduty_user" "sam" {
   name  = "Sam Blake"
   email = "sam.blake@pagerduty.demo"
@@ -104,30 +101,10 @@ resource "pagerduty_user" "Martha" {
 }
 
 ################################################################################################
-# Create user contact information
 
-resource "pagerduty_user_contact_method" "phone" {
-  user_id      = pagerduty_user.hug.id
-  type         = "phone_contact_method"
-  country_code = "+1"
-  address      = "2025550199"
-  label        = "Work"
-}
-
-resource "pagerduty_user_contact_method" "sms" {
-  user_id      = pagerduty_user.hug.id
-  type         = "sms_contact_method"
-  country_code = "+1"
-  address      = "2025550199"
-  label        = "Work"
-}
 
 ################################################################################################
 # Assign the Users to the right Teams: -
-resource "pagerduty_team_membership" "teamHug" {
-  user_id = pagerduty_user.hug.id
-  team_id = pagerduty_team.automation.id
-}
 resource "pagerduty_team_membership" "teamSam" {
   user_id = pagerduty_user.sam.id
   team_id = pagerduty_team.automation.id
@@ -171,22 +148,26 @@ resource "pagerduty_team_membership" "teamMartha" {
 ################################################################################################
 
 
-
+# 7 Days 604800 1 Day 86400 14 Days 1209600 12 Hours 43200
 ################################################################################################
 # Create PagerDuty Schedules
 resource "pagerduty_schedule" "automation_sch" {
   name      = "Automation On-call Schedule"
-  time_zone = "Europe/London"
+  time_zone = "America/Chicago"
   layer {
-    name                         = "Daily Rotation"
+    name                         = "Weekly Rotation"
     start                        = "2018-11-06T20:00:00-10:00"
     rotation_virtual_start       = "2018-11-07T06:00:00+00:00"
     rotation_turn_length_seconds = 86400
     users                        = ["${pagerduty_user.sam.id}",
                                     "${pagerduty_user.bob.id}",
-									"${pagerduty_user.hug.id}",
                                     "${pagerduty_user.dave.id}",
                                     "${pagerduty_user.kate.id}"]
+	restriction {
+      type              = "daily_restriction"
+      start_time_of_day = "08:00:00"
+      duration_seconds  = 43200
+	}
   }
 }
 resource "pagerduty_schedule" "bankPayment" {
@@ -205,8 +186,8 @@ resource "pagerduty_schedule" "bankPayment" {
 resource "pagerduty_schedule" "bankApply" {
   name      = "Apply On-call Schedule"
   time_zone = "Europe/London"
-  layer {
-    name                         = "Daily Rotation"
+    layer {
+	name                         = "Daily Rotation"
     start                        = "2018-11-06T20:00:00-10:00"
     rotation_virtual_start       = "2018-11-07T06:00:00+00:00"
     rotation_turn_length_seconds = 86400
@@ -237,7 +218,7 @@ resource "pagerduty_escalation_policy" "EngineeringEP" {
   teams     = ["${pagerduty_team.automation.id}"]
 
   rule {
-    escalation_delay_in_minutes = 15
+    escalation_delay_in_minutes = 10
 
     target {
       type = "schedule_reference"
@@ -407,4 +388,104 @@ resource "pagerduty_service" "Bank-Transfer" {
   }
 
 }
+
 ################################################################################################
+# Integrations
+################################################################################################
+
+resource "pagerduty_service_integration" "bank-Transfer-Generic-API_V2" {
+  name    = "Generic API Service Integration V2"
+  type    = "events_api_v2_inbound_integration"
+  service = pagerduty_service.Bank-Transfer.id
+}
+
+resource "pagerduty_service_integration" "Bank-Transfer-CET" {
+  name    = "Custom Event Transformer"
+  service = pagerduty_service.Bank-Transfer.id
+  vendor  = data.pagerduty_vendor.custom.id
+}
+
+data "pagerduty_vendor" "custom" {
+  name = "Custom Event Transformer"
+}
+
+################################################################################################
+# Test CET Integrations work in progress
+################################################################################################
+
+# data "http" "CET-test" {
+#  url = "https://events.pagerduty.com/integration/${pagerduty_service_integration.Bank-Transfer-CET.integration_key}/enqueue"
+#  }
+
+################################################################################################
+
+# Event Rules Require Priority enabled P1 PBB4FSI P2 PY1GEDV P3 PUSVE15 P4 PQG7DOF P5 PQG7DOF
+# 2/1/2020 6am epoch timestamp 1580558400000 calulate using and convert to milliseconds
+# https://www.freeformatter.com/epoch-timestamp-to-date-converter.html
+################################################################################################
+resource "pagerduty_event_rule" "one" {
+    action_json = jsonencode([
+        [
+            "route",
+            pagerduty_service.Bank-Transfer.id
+        ],
+        [
+            "severity",
+            "warning"
+        ],
+        [
+            "annotate",
+            "1 Managed by terraform"
+        ],
+        [
+            "priority",
+            "PBB4FSI"
+        ]
+    ])
+    condition_json = jsonencode([
+        "and",
+        ["contains",["path","payload","source"],"website"],
+        ["contains",["path","headers","from","0","address"],"homer"]
+    ])
+    advanced_condition_json = jsonencode([
+        [
+            "scheduled-weekly",
+            1580558400000,
+            3600000,
+            "America/Chicago",
+            [
+                1,
+                2,
+                3,
+                5,
+                7
+            ]
+        ]
+    ])
+}
+resource "pagerduty_event_rule" "two" {
+    action_json = jsonencode([
+        [
+            "route",
+            pagerduty_service.Bank-Transfer.id
+        ],
+        [
+            "severity",
+            "warning"
+        ],
+        [
+            "annotate",
+            "2 Managed by terraform"
+        ],
+        [
+            "priority",
+            "PY1GEDV"
+        ]
+    ])
+    condition_json = jsonencode([
+        "and",
+        ["contains",["path","payload","source"],"website"],
+        ["contains",["path","headers","from","0","address"],"homer"]
+    ])
+    depends_on = [pagerduty_event_rule.one]
+}

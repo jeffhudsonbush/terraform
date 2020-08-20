@@ -39,9 +39,9 @@ resource "pagerduty_team" "Stakeholders" {
 ################################################################################################
 # Create a PagerDuty users
 
-resource "pagerduty_user" "darren" {
-  name  = "Darren Huggins"
-  email = "dhuggins@pagerduty.com"
+resource "pagerduty_user" "bo_jackson" {
+  name  = "Bo Jackson"
+  email = "bo.jackson@example.com"
   color = "blue"
   role = "user"
 }

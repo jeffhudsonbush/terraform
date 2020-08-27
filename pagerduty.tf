@@ -3,7 +3,7 @@
 # enabled to support event rule creation. Use the API key to generate the Priotiy ID's here:
 # https://api-reference.pagerduty.com/#!/Priorities/get_priorities
 # To Destroy the config run Destroy twice (perhaps a bug in the provider)
-# working with Doug M
+# remove Bo Jackson
 ################################################################################################
 variable "pd_token" {
   type = string
@@ -40,12 +40,12 @@ resource "pagerduty_team" "Stakeholders" {
 ################################################################################################
 # Create a PagerDuty users
 
-resource "pagerduty_user" "bo_jackson" {
-  name  = "Bo Jackson"
-  email = "bo.jackson@example.com"
-  color = "blue"
-  role = "user"
-}
+#resource "pagerduty_user" "bo_jackson" {
+ # name  = "Bo Jackson"
+  #email = "bo.jackson@example.com"
+  #color = "blue"
+  #role = "user"
+#}
 
 resource "pagerduty_user" "jimh" {
   name  = "Jim TH"

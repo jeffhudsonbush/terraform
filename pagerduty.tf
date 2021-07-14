@@ -3,7 +3,7 @@
 # enabled to support event rule creation. Use the API key to generate the Priotiy ID's here:
 # https://api-reference.pagerduty.com/#!/Priorities/get_priorities
 # To Destroy the config run Destroy twice (perhaps a bug in the provider)
-# working with allegrasexton instance
+# working with alex instance
 ################################################################################################
 variable "pd_token" {
   type = string
@@ -13,7 +13,7 @@ provider "pagerduty" {
 #  WAR EAGLE token = "vgk-Vmo6ttpssbr4sxbk"
 #  allegrasexton token = "vgk-Vmo6ttpssbr4sxbk"
 # token = var.pd_token
-  token = "u+8n9VTs52yehqy3z_6w"
+  token = "u+mAbtWTdbQimbYwqQ2g"
 }
 
 #################################################################################################

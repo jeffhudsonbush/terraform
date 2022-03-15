@@ -10,11 +10,7 @@ variable "pd_token" {
 }
 provider "pagerduty" {
 #TEST DEMO - currently https://wareagle.pagerduty.com/
-# WAR EAGLE token = "vgk-Vmo6ttpssbr4sxbk"
-# allegrasexton token = "vgk-Vmo6ttpssbr4sxbk"
-# Tiffany key = u+xG6rKx63bt2uYV2QLA
 token = var.pd_token
-# token = "vgk-Vmo6ttpssbr4sxbk"
 }
 
 #################################################################################################
